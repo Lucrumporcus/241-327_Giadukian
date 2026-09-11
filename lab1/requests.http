@@ -1,0 +1,39 @@
+@hostname = http://localhost:8000
+
+### List — получить список
+GET {{hostname}}/api/book/
+Content-Type: application/json
+
+### Retrieve — получить одну по id
+GET {{hostname}}/api/book/1/
+Content-Type: application/json
+
+### Create — создать
+POST {{hostname}}/api/book/
+Content-Type: application/json
+
+{
+  "title": "Новая книга",
+  "author": "Иван Иванов",
+  "year": 2025,
+  "price": "999.99",
+  "is_available": true,
+  "description": "Тестовое описание"
+}
+
+### Update — обновить целиком
+PUT {{hostname}}/api/book/1/
+Content-Type: application/json
+
+{
+  "title": "Обновлённая книга",
+  "author": "Пётр Петров",
+  "year": 2024,
+  "price": "1500.00",
+  "is_available": false,
+  "description": "Обновлено"
+}
+
+### Delete — удалить
+DELETE {{hostname}}/api/book/1/
+Content-Type: application/json
