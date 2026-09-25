@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:16-alpine
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - lab2net
+
+  migrate:
+    build: ./backend
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput"
+    env_file: .env
+    volumes:
+      - staticfiles:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lab2net
+
+  backend:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - staticfiles:/app/staticfiles
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - "8000"
+    networks:
+      - lab2net
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - staticfiles:/app/staticfiles
+      - ./certs:/etc/nginx/certs:ro
+    secrets:
+      - nginx_key
+    depends_on:
+      - backend
+    networks:
+      - lab2net
+
+volumes:
+  pgdata:
+  staticfiles:
+
+secrets:
+  nginx_key:
+    file: ./certs/lab2.key
+
+networks:
+  lab2net:
+    driver: bridge
